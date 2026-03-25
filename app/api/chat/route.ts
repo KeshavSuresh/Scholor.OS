@@ -1,7 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,19 +19,24 @@ EXTRACURRICULARS: ${JSON.stringify(context.extracurriculars, null, 2)}
 
 PROJECTS: ${JSON.stringify(context.projects, null, 2)}
 
-Use this data to answer questions accurately and give personalized strategic advice. Be concise, encouraging, and actionable. Format responses with markdown when helpful.`;
+Use this data to answer questions accurately and give personalized strategic advice. Be concise, encouraging, and actionable.`;
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: messages.map((m: { role: string; content: string }) => ({
-        role: m.role,
-        content: m.content,
-      })),
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: systemPrompt,
     });
 
-    const text = response.content[0].type === "text" ? response.content[0].text : "";
+    // Convert message history for Gemini (exclude the last user message)
+    const history = messages.slice(0, -1).map((m: { role: string; content: string }) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    const chat = model.startChat({ history });
+    const lastMessage = messages[messages.length - 1].content;
+    const result = await chat.sendMessage(lastMessage);
+    const text = result.response.text();
+
     return NextResponse.json({ text });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
