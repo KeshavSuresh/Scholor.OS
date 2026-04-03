@@ -1,57 +1,55 @@
-import type { Course, GradeItem, SubcategoryKey } from "./types";
+import type { Course, GradeItem } from "./types";
 
-// Weights per subcategory (as % of total course grade)
-export const WEIGHTS: Record<SubcategoryKey, number> = {
-  testsQuizzes: 0.4,
-  assignmentsLabs: 0.3,
-  labExam: 0.1,
-  writtenExam: 0.2,
-};
-
-export const SUBCATEGORY_LABELS: Record<SubcategoryKey, string> = {
-  testsQuizzes: "Tests & Quizzes",
-  assignmentsLabs: "Assignments & Labs",
-  labExam: "Lab Exam",
-  writtenExam: "Written Exam",
-};
-
-export const TERM_WORK_KEYS: SubcategoryKey[] = ["testsQuizzes", "assignmentsLabs"];
-export const SUMMATIVE_KEYS: SubcategoryKey[] = ["labExam", "writtenExam"];
-
-/** Raw average for a subcategory (null if no items) */
-export function subcategoryAverage(items: GradeItem[], key: SubcategoryKey): number | null {
-  const filtered = items.filter((i) => i.subcategory === key);
+/** Average for a specific category (null if no items) */
+export function categoryAverage(items: GradeItem[], categoryId: string): number | null {
+  const filtered = items.filter((i) => i.categoryId === categoryId);
   if (!filtered.length) return null;
   const earned = filtered.reduce((s, i) => s + i.earned, 0);
   const possible = filtered.reduce((s, i) => s + i.possible, 0);
   return possible === 0 ? 0 : (earned / possible) * 100;
 }
 
-/** Weighted current grade — only counts subcategories that have items */
+/** Weighted current grade — only counts categories that have items */
 export function currentGrade(course: Course): number | null {
-  const keys = Object.keys(WEIGHTS) as SubcategoryKey[];
   let weightedSum = 0;
   let totalWeight = 0;
-  for (const key of keys) {
-    const avg = subcategoryAverage(course.items, key);
+  for (const cat of course.categories) {
+    const avg = categoryAverage(course.items, cat.id);
     if (avg !== null) {
-      weightedSum += avg * WEIGHTS[key];
-      totalWeight += WEIGHTS[key];
+      weightedSum += avg * cat.weight;
+      totalWeight += cat.weight;
     }
   }
   if (totalWeight === 0) return null;
   return weightedSum / totalWeight;
 }
 
-/** Highest possible grade — assumes 100% on unentered subcategories */
+/** Highest possible grade — assumes 100% on unentered categories */
 export function highestPossibleGrade(course: Course): number {
-  const keys = Object.keys(WEIGHTS) as SubcategoryKey[];
+  const totalWeight = course.categories.reduce((s, c) => s + c.weight, 0) || 100;
   let weightedSum = 0;
-  for (const key of keys) {
-    const avg = subcategoryAverage(course.items, key);
-    weightedSum += (avg ?? 100) * WEIGHTS[key];
+  for (const cat of course.categories) {
+    const avg = categoryAverage(course.items, cat.id);
+    weightedSum += (avg ?? 100) * cat.weight;
   }
-  return weightedSum;
+  return weightedSum / totalWeight;
+}
+
+/** Score needed on remaining categories to hit goal */
+export function scoreNeededForGoal(course: Course, goal: number): number | null {
+  const totalWeight = course.categories.reduce((s, c) => s + c.weight, 0) || 100;
+  let earnedWeighted = 0;
+  let remainingWeight = 0;
+  for (const cat of course.categories) {
+    const avg = categoryAverage(course.items, cat.id);
+    if (avg !== null) {
+      earnedWeighted += avg * (cat.weight / totalWeight);
+    } else {
+      remainingWeight += cat.weight / totalWeight;
+    }
+  }
+  if (remainingWeight === 0) return null;
+  return (goal / 100 - earnedWeighted / 100) / remainingWeight * 100;
 }
 
 /** Letter grade from percentage */
@@ -78,21 +76,4 @@ export function gradeColor(pct: number): string {
   if (pct >= 60) return "text-yellow-400";
   if (pct >= 50) return "text-orange-400";
   return "text-red-400";
-}
-
-/** Score needed on remaining weight to hit goal */
-export function scoreNeededForGoal(course: Course, goal: number): number | null {
-  const keys = Object.keys(WEIGHTS) as SubcategoryKey[];
-  let earnedWeighted = 0;
-  let remainingWeight = 0;
-  for (const key of keys) {
-    const avg = subcategoryAverage(course.items, key);
-    if (avg !== null) {
-      earnedWeighted += avg * WEIGHTS[key];
-    } else {
-      remainingWeight += WEIGHTS[key];
-    }
-  }
-  if (remainingWeight === 0) return null;
-  return (goal - earnedWeighted) / remainingWeight;
 }

@@ -1,12 +1,16 @@
 // ── Grade Tracker ──────────────────────────────────────────────
-export type SubcategoryKey = "testsQuizzes" | "assignmentsLabs" | "labExam" | "writtenExam";
+export interface CourseCategory {
+  id: string;
+  name: string;   // e.g. "Tests & Quizzes"
+  weight: number; // 0–100 (percentage)
+}
 
 export interface GradeItem {
   id: string;
   name: string;
   earned: number;
   possible: number;
-  subcategory: SubcategoryKey;
+  categoryId: string; // references CourseCategory.id
   date?: string;
 }
 
@@ -15,6 +19,7 @@ export interface Course {
   name: string;
   color: string;
   goalGrade?: number;
+  categories: CourseCategory[];
   items: GradeItem[];
 }
 

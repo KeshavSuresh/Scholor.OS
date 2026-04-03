@@ -2,8 +2,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
-  Course, GradeItem, Assignment, TimeBlock,
-  Activity, Project, Milestone, ChatMessage, UserProfile,
+  Course, CourseCategory, GradeItem, Assignment, TimeBlock,
+  Activity, Project, ChatMessage, UserProfile,
 } from "@/lib/types";
 import { generateId } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ interface AppState {
 
   // Courses
   courses: Course[];
-  addCourse: (name: string, color: string) => void;
+  addCourse: (name: string, color: string, categories: Omit<CourseCategory, "id">[]) => void;
   removeCourse: (id: string) => void;
   addGradeItem: (courseId: string, item: Omit<GradeItem, "id">) => void;
   removeGradeItem: (courseId: string, itemId: string) => void;
@@ -54,21 +54,26 @@ interface AppState {
   logout: () => void;
 }
 
-const DEFAULT_COURSES: Course[] = [
-  { id: "chem", name: "Chemistry", color: "#00e5a0", items: [] },
-  { id: "calc", name: "Calculus & Vectors", color: "#7c6aff", items: [] },
-  { id: "phys", name: "Physics", color: "#ff6a5e", items: [] },
-];
-
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       profile: { name: "", school: "", semesterStart: "", semesterEnd: "", onboarded: false },
       setProfile: (p) => set((s) => ({ profile: { ...s.profile, ...p } })),
 
-      courses: DEFAULT_COURSES,
-      addCourse: (name, color) =>
-        set((s) => ({ courses: [...s.courses, { id: generateId(), name, color, items: [] }] })),
+      courses: [],
+      addCourse: (name, color, categories) =>
+        set((s) => ({
+          courses: [
+            ...s.courses,
+            {
+              id: generateId(),
+              name,
+              color,
+              categories: categories.map((c) => ({ ...c, id: generateId() })),
+              items: [],
+            },
+          ],
+        })),
       removeCourse: (id) => set((s) => ({ courses: s.courses.filter((c) => c.id !== id) })),
       addGradeItem: (courseId, item) =>
         set((s) => ({
@@ -141,7 +146,7 @@ export const useAppStore = create<AppState>()(
         localStorage.removeItem("scholar-os-data");
         set({
           profile: { name: "", school: "", semesterStart: "", semesterEnd: "", onboarded: false },
-          courses: DEFAULT_COURSES,
+          courses: [],
           assignments: [],
           blocks: [],
           activities: [],
