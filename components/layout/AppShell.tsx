@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  LayoutDashboard, Calendar, BookOpen, Trophy, Wrench, Brain,
+  LayoutDashboard, Calendar, BookOpen, Trophy, Wrench, Brain, LogOut,
 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
@@ -21,6 +21,7 @@ const NAV = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const onboarded = useAppStore((s) => s.profile.onboarded);
+  const logout = useAppStore((s) => s.logout);
 
   if (!onboarded) return <OnboardingWizard />;
 
@@ -53,6 +54,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+        <div className="px-2 py-4 border-t border-[#2a2a35]">
+          <button
+            onClick={logout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-[#6b6b80] hover:text-[#ff6a5e] hover:bg-[#18181f] transition-colors w-full"
+          >
+            <LogOut size={16} />
+            Log out
+          </button>
+        </div>
       </aside>
 
       {/* Main content */}

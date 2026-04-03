@@ -49,6 +49,9 @@ interface AppState {
   messages: ChatMessage[];
   addMessage: (m: Omit<ChatMessage, "id" | "timestamp">) => void;
   clearMessages: () => void;
+
+  // Auth
+  logout: () => void;
 }
 
 const DEFAULT_COURSES: Course[] = [
@@ -133,6 +136,19 @@ export const useAppStore = create<AppState>()(
           messages: [...s.messages, { ...m, id: generateId(), timestamp: Date.now() }],
         })),
       clearMessages: () => set({ messages: [] }),
+
+      logout: () => {
+        localStorage.removeItem("scholar-os-data");
+        set({
+          profile: { name: "", school: "", semesterStart: "", semesterEnd: "", onboarded: false },
+          courses: DEFAULT_COURSES,
+          assignments: [],
+          blocks: [],
+          activities: [],
+          projects: [],
+          messages: [],
+        });
+      },
     }),
     { name: "scholar-os-data" }
   )
