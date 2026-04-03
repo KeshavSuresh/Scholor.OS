@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useAppStore } from "@/store/useAppStore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Send, Trash2, Brain } from "lucide-react";
 import { currentGrade, letterGrade } from "@/lib/gradeUtils";
 import { todayStr } from "@/lib/utils";
