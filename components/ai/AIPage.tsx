@@ -76,7 +76,10 @@ export function AIPage() {
       if (data.error) throw new Error(data.error);
       addMessage({ role: "assistant", content: data.text });
     } catch (err) {
-      addMessage({ role: "assistant", content: "Sorry, I ran into an error. Check your API key in `.env.local`." });
+      addMessage({
+        role: "assistant",
+        content: "Sorry, I ran into an error. Set `XAI_API_KEY` in `.env.local` (from the xAI Console) and try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -89,7 +92,7 @@ export function AIPage() {
         <div className="flex items-center gap-2">
           <Brain size={18} className="text-[#7c6aff]" />
           <h1 className="font-bold font-syne">Scholar AI</h1>
-          <span className="text-xs text-[#6b6b80] bg-[#18181f] px-2 py-0.5 rounded-full">gemini-1.5-flash</span>
+          <span className="text-xs text-[#6b6b80] bg-[#18181f] px-2 py-0.5 rounded-full">Grok</span>
         </div>
         {messages.length > 0 && (
           <button onClick={clearMessages} className="text-[#6b6b80] hover:text-[#ff6a5e] transition-colors">
