@@ -19,7 +19,7 @@ export function CourseCard({ course }: { course: Course }) {
   const grade = currentGrade(course);
   const highest = highestPossibleGrade(course);
   const needed = course.goalGrade != null ? scoreNeededForGoal(course, course.goalGrade) : null;
-  const totalWeight = course.categories.reduce((s, c) => s + c.weight, 0);
+  const totalWeight = (course.categories ?? []).reduce((s, c) => s + c.weight, 0) || 100;
 
   const submitItem = (categoryId: string) => {
     if (!form.name.trim() || !form.earned || !form.possible) return;
@@ -121,7 +121,7 @@ export function CourseCard({ course }: { course: Course }) {
 
               {/* Dynamic categories */}
               <div className="space-y-4">
-                {course.categories.map((cat) => (
+                {(course.categories ?? []).map((cat) => (
                   <CategorySection
                     key={cat.id}
                     category={cat}

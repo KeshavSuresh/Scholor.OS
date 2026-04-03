@@ -11,6 +11,7 @@ export function categoryAverage(items: GradeItem[], categoryId: string): number 
 
 /** Weighted current grade — only counts categories that have items */
 export function currentGrade(course: Course): number | null {
+  if (!course.categories?.length) return null;
   let weightedSum = 0;
   let totalWeight = 0;
   for (const cat of course.categories) {
@@ -26,6 +27,7 @@ export function currentGrade(course: Course): number | null {
 
 /** Highest possible grade — assumes 100% on unentered categories */
 export function highestPossibleGrade(course: Course): number {
+  if (!course.categories?.length) return 0;
   const totalWeight = course.categories.reduce((s, c) => s + c.weight, 0) || 100;
   let weightedSum = 0;
   for (const cat of course.categories) {
@@ -37,6 +39,7 @@ export function highestPossibleGrade(course: Course): number {
 
 /** Score needed on remaining categories to hit goal */
 export function scoreNeededForGoal(course: Course, goal: number): number | null {
+  if (!course.categories?.length) return null;
   const totalWeight = course.categories.reduce((s, c) => s + c.weight, 0) || 100;
   let earnedWeighted = 0;
   let remainingWeight = 0;

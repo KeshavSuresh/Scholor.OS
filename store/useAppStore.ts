@@ -155,6 +155,26 @@ export const useAppStore = create<AppState>()(
         });
       },
     }),
-    { name: "scholar-os-data" }
+    {
+      name: "scholar-os-data",
+      version: 2,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as Record<string, unknown>;
+        // v0/v1 → v2: courses had no `categories` field
+        if (version < 2 && Array.isArray(state.courses)) {
+          state.courses = (state.courses as Record<string, unknown>[]).map((c) => ({
+            ...c,
+            categories: Array.isArray(c.categories) ? c.categories : [],
+            items: Array.isArray(c.items)
+              ? (c.items as Record<string, unknown>[]).map((item) => ({
+                  ...item,
+                  categoryId: item.categoryId ?? item.subcategory ?? "",
+                }))
+              : [],
+          }));
+        }
+        return state;
+      },
+    }
   )
 );
